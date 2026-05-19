@@ -54,6 +54,13 @@ class GameNotifier extends StateNotifier<GameUiState> {
     _subs.add(_socket.errorMsgStream.listen(_onError));
   }
 
+  /// Called once after GameScreen's first frame — asks the server to resend
+  /// game:state + game:hand, which may have arrived before this notifier
+  /// existed (broadcast streams drop events with no listener).
+  Future<void> requestState(String code) async {
+    await _socket.lobbyResume(code, myPlayerId);
+  }
+
   void _onState(PublicState s) {
     final prev = state.state;
     // Detect turn transition to me
@@ -125,7 +132,12 @@ class GameNotifier extends StateNotifier<GameUiState> {
     }
   }
 
-  Future<void> onDraw() => _socket.gameDraw();
+  Future<void> onDraw() async {
+    final res = await _socket.gameDraw();
+    if (res['ok'] != true) {
+      _onError(res['error'] as String? ?? 'Cannot draw.');
+    }
+  }
 
   void onNope() => _socket.gameNope();
 
@@ -149,7 +161,8 @@ class GameNotifier extends StateNotifier<GameUiState> {
   }
 }
 
-final gameProvider = StateNotifierProvider.family<GameNotifier, GameUiState, String>(
+final gameProvider = StateNotifierProvider.autoDispose
+    .family<GameNotifier, GameUiState, String>(
   (ref, playerId) {
     final socket = ref.watch(socketServiceProvider);
     return GameNotifier(socket, playerId);

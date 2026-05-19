@@ -33,17 +33,30 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
 
   Future<void> _init() async {
     final socket = ref.read(socketServiceProvider);
+
     _startedSub = socket.lobbyStartedStream.listen((_) {
-      if (mounted) {
-        final lobby = ref.read(lobbyProvider);
-        context.go('/game', extra: GameRouteExtra(
-          roomCode: lobby.myRoomCode ?? '',
-          playerId: lobby.myPlayerId ?? '',
-        ));
-      }
+      if (mounted) _goToGame();
     });
 
     await ref.read(lobbyProvider.notifier).tryResume();
+
+    // If resuming mid-game, lobby:update arrives before the ack so
+    // lobby.started is already true by here — navigate directly.
+    if (mounted) {
+      final lobby = ref.read(lobbyProvider);
+      if (lobby.lobby?.started == true && lobby.myPlayerId != null) {
+        _goToGame();
+      }
+    }
+  }
+
+  void _goToGame() {
+    final lobby = ref.read(lobbyProvider);
+    if (lobby.myRoomCode == null || lobby.myPlayerId == null) return;
+    context.go('/game', extra: GameRouteExtra(
+      roomCode: lobby.myRoomCode!,
+      playerId: lobby.myPlayerId!,
+    ));
   }
 
   @override
@@ -85,34 +98,14 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Title
-                        Text(
-                          tr.title,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontFamily: 'Cairo',
-                            fontSize: 32,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.gold,
-                            letterSpacing: 2,
-                            shadows: [
-                              Shadow(color: AppColors.crimson, blurRadius: 18),
-                              Shadow(color: AppColors.gold, blurRadius: 8),
-                            ],
-                          ),
+                        // Logo
+                        Image.asset(
+                          'assets/images/logo.jpeg',
+                          width: 260,
+                          height: 260,
+                          fit: BoxFit.contain,
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          tr.subtitle,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontFamily: 'Cairo',
-                            fontSize: 13,
-                            color: AppColors.goldDim,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                        const SizedBox(height: 36),
+                        const SizedBox(height: 20),
 
                         // Panel switcher
                         AnimatedSwitcher(

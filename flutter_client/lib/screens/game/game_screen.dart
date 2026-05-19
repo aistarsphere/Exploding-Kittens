@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/game_provider.dart';
-import '../../providers/socket_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/game/game_log.dart';
 import '../../widgets/game/hand_section.dart';
@@ -38,18 +37,20 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
+    // After first frame: GameNotifier is subscribed — ask server to resend
+    // game:state + game:hand (they arrive before this screen exists).
+    WidgetsBinding.instance.addPostFrameCallback((_) => _requestState());
+  }
+
+  Future<void> _requestState() async {
+    if (!mounted) return;
+    await ref.read(gameProvider(widget.playerId).notifier)
+        .requestState(widget.roomCode);
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _tryResume();
-    }
-  }
-
-  Future<void> _tryResume() async {
-    final socket = ref.read(socketServiceProvider);
-    await socket.lobbyResume(widget.roomCode, widget.playerId);
+    if (state == AppLifecycleState.resumed) _requestState();
   }
 
   @override
