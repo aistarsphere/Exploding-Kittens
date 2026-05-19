@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/card_model.dart';
-import '../../models/card_types.dart';
 import '../../models/game_state.dart';
 import '../../providers/lang_provider.dart';
 import '../../theme/app_theme.dart';

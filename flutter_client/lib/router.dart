@@ -7,6 +7,13 @@ class GameRouteExtra {
   final String roomCode;
   final String playerId;
   const GameRouteExtra({required this.roomCode, required this.playerId});
+
+  Map<String, dynamic> toJson() => {'roomCode': roomCode, 'playerId': playerId};
+
+  factory GameRouteExtra.fromJson(Map<String, dynamic> json) => GameRouteExtra(
+    roomCode: json['roomCode'] as String,
+    playerId: json['playerId'] as String,
+  );
 }
 
 final appRouter = GoRouter(

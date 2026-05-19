@@ -25,7 +25,7 @@ class LobbyState {
     hostId: j['hostId'] as String?,
     started: (j['started'] as bool?) ?? false,
     players: (j['players'] as List<dynamic>)
-        .map((p) => LobbyPlayer.fromJson(p as Map<String, dynamic>))
+        .map((p) => LobbyPlayer.fromJson(Map<String, dynamic>.from(p as Map)))
         .toList(),
   );
 }

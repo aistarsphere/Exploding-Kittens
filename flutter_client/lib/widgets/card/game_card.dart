@@ -71,13 +71,24 @@ class _GameCardState extends ConsumerState<GameCard> {
           borderRadius: BorderRadius.circular(5),
           child: useImage
               ? CachedNetworkImage(
-                  imageUrl: AppConfig.cardImageUrl(imgFilename!),
+                  imageUrl: AppConfig.cardImageUrl(imgFilename),
                   fit: BoxFit.cover,
+                  width: widget.width,
+                  height: widget.height,
+                  fadeInDuration: const Duration(milliseconds: 150),
+                  placeholder: (_, __) => _CssCard(
+                    display: display, bgColor: bgColor,
+                    width: widget.width, height: widget.height,
+                  ),
                   errorWidget: (_, __, ___) {
+                    // Mark as failed so future builds skip the network attempt.
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       if (mounted) setState(() => _imgFailed = true);
                     });
-                    return _CssCard(display: display, bgColor: bgColor, width: widget.width, height: widget.height);
+                    return _CssCard(
+                      display: display, bgColor: bgColor,
+                      width: widget.width, height: widget.height,
+                    );
                   },
                 )
               : _CssCard(display: display, bgColor: bgColor, width: widget.width, height: widget.height),

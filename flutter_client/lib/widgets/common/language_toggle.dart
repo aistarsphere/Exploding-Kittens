@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/lang_provider.dart';
-import '../../theme/app_theme.dart';
 
 class LanguageToggle extends ConsumerWidget {
   const LanguageToggle({super.key});

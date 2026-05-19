@@ -3,34 +3,40 @@ import 'package:flutter/material.dart';
 import '../../models/card_model.dart';
 import 'game_card.dart';
 
-double computeOverlap(int count, double screenWidth) {
-  if (count <= 1) return 0;
-  double cardW = 104, gap = 8, padding = 64;
-  if (screenWidth <= 380) {
-    cardW = 66; gap = 4; padding = 24;
-  } else if (screenWidth <= 600) {
-    cardW = 78; gap = 4; padding = 28;
-  } else if (screenWidth <= 820) {
-    cardW = 92; gap = 8; padding = 40;
-  }
-  final available = max(160.0, screenWidth - padding);
-  final fullWidth = count * cardW + (count - 1) * gap;
-  if (fullWidth <= available) return 0;
-  return -min(cardW * 0.72, (fullWidth - available) / (count - 1) + gap);
-}
-
-double _cardWidth(double screenWidth) {
-  if (screenWidth <= 380) return 66;
-  if (screenWidth <= 600) return 78;
-  if (screenWidth <= 820) return 92;
+double _cardWidth(double sw) {
+  if (sw <= 380) return 66;
+  if (sw <= 600) return 78;
+  if (sw <= 820) return 92;
   return 104;
 }
 
-double _cardHeight(double screenWidth) {
-  if (screenWidth <= 380) return 92;
-  if (screenWidth <= 600) return 108;
-  if (screenWidth <= 820) return 128;
+double _cardHeight(double sw) {
+  if (sw <= 380) return 92;
+  if (sw <= 600) return 108;
+  if (sw <= 820) return 128;
   return 144;
+}
+
+double _padding(double sw) {
+  if (sw <= 380) return 24;
+  if (sw <= 600) return 28;
+  if (sw <= 820) return 40;
+  return 64;
+}
+
+/// Returns the per-card horizontal spacing (= cardWidth when no overlap,
+/// or less when cards must overlap to fit).
+double _spacingFor(int count, double sw) {
+  final cardW = _cardWidth(sw);
+  if (count <= 1) return cardW;
+  final gap = sw <= 600 ? 4.0 : 8.0;
+  final available = max(160.0, sw - _padding(sw));
+  final natural = count * cardW + (count - 1) * gap;
+  if (natural <= available) return cardW + gap;
+  // need to overlap — minimum spacing is 28% of card width (max 72% overlap)
+  final minSpacing = cardW * 0.28;
+  final reduced = (available - cardW) / (count - 1);
+  return max(minSpacing, reduced);
 }
 
 class CardHand extends StatelessWidget {
@@ -47,50 +53,60 @@ class CardHand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final overlap = computeOverlap(hand.length, screenWidth);
-    final cardW = _cardWidth(screenWidth);
-    final cardH = _cardHeight(screenWidth);
+    final sw = MediaQuery.of(context).size.width;
+    final cardW = _cardWidth(sw);
+    final cardH = _cardHeight(sw);
     final n = hand.length;
+
+    if (n == 0) {
+      return SizedBox(height: cardH + 20);
+    }
+
+    final spacing = _spacingFor(n, sw);
+    final totalWidth = cardW + (n - 1) * spacing;
     final center = (n - 1) / 2;
 
-    if (n == 0) return const SizedBox(height: 100);
-
     return SizedBox(
-      height: cardH + 20,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        physics: const NeverScrollableScrollPhysics(),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: hand.asMap().entries.map((entry) {
-            final i = entry.key;
-            final card = entry.value;
-            final offsetFromCenter = i - center;
-            final rot = offsetFromCenter * 0.042; // radians ~2.4deg
-            final lift = (offsetFromCenter.abs() * 1.8);
-            final isSelected = selectedIds.contains(card.id);
-
-            return Transform(
+      height: cardH + 24,
+      width: double.infinity,
+      child: ClipRect(
+        child: OverflowBox(
+          minWidth: 0,
+          maxWidth: totalWidth,
+          alignment: Alignment.bottomCenter,
+          child: SizedBox(
+            width: totalWidth,
+            height: cardH + 24,
+            child: Stack(
               alignment: Alignment.bottomCenter,
-              transform: Matrix4.identity()
-                ..rotateZ(rot)
-                ..translate(0.0, isSelected ? -14.0 : lift),
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: i == 0 ? 0 : (overlap < 0 ? -overlap / 2 : 4),
-                  right: i == n - 1 ? 0 : (overlap < 0 ? -overlap / 2 : 4),
-                ),
-                child: GameCard(
-                  card: card,
-                  selected: isSelected,
-                  width: cardW,
-                  height: cardH,
-                  onTap: () => onToggle(card.id),
-                ),
-              ),
-            );
-          }).toList(),
+              clipBehavior: Clip.none,
+              children: List.generate(n, (i) {
+                final card = hand[i];
+                final offsetFromCenter = i - center;
+                final rot = offsetFromCenter * 0.042; // ~2.4°
+                final lift = offsetFromCenter.abs() * 1.6;
+                final isSelected = selectedIds.contains(card.id);
+                final left = i * spacing;
+                final bottom = (isSelected ? 16.0 : 0.0) - lift;
+
+                return Positioned(
+                  left: left,
+                  bottom: bottom,
+                  child: Transform.rotate(
+                    angle: rot,
+                    alignment: Alignment.bottomCenter,
+                    child: GameCard(
+                      card: card,
+                      selected: isSelected,
+                      width: cardW,
+                      height: cardH,
+                      onTap: () => onToggle(card.id),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
         ),
       ),
     );

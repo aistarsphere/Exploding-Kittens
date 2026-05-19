@@ -38,6 +38,15 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
       if (mounted) _goToGame();
     });
 
+    // Wait for the socket to connect before trying to resume, otherwise
+    // the emit-with-ack timeout (10s) makes the lobby feel frozen on launch.
+    if (!socket.connected) {
+      await socket.connectionStream
+          .firstWhere((c) => c)
+          .timeout(const Duration(seconds: 12), onTimeout: () => false);
+    }
+    if (!mounted) return;
+
     await ref.read(lobbyProvider.notifier).tryResume();
 
     // If resuming mid-game, lobby:update arrives before the ack so
@@ -99,11 +108,25 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // Logo
-                        Image.asset(
-                          'assets/images/logo.jpeg',
-                          width: 260,
-                          height: 260,
-                          fit: BoxFit.contain,
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Image.asset(
+                            'assets/images/logo.jpeg',
+                            width: 240,
+                            height: 240,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          tr.subtitle,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 12,
+                            color: AppColors.goldDim,
+                            letterSpacing: 1,
+                          ),
                         ),
                         const SizedBox(height: 20),
 

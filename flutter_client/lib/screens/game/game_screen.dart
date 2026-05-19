@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../l10n/app_localizations.dart';
 import '../../providers/game_provider.dart';
+import '../../providers/lang_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/game/game_log.dart';
 import '../../widgets/game/hand_section.dart';
@@ -88,6 +90,9 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
                     onLeave: _onLeave,
                   ),
 
+                  // Disconnect banner
+                  if (!game.connected) const _DisconnectBanner(),
+
                   if (state != null) ...[
                     // Opponents
                     OpponentsRow(state: state, myPlayerId: widget.playerId),
@@ -107,9 +112,29 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
                     // Game log
                     Expanded(child: GameLog(log: state.log)),
                   ] else ...[
-                    const Expanded(
+                    Expanded(
                       child: Center(
-                        child: CircularProgressIndicator(color: AppColors.gold),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(
+                              width: 36, height: 36,
+                              child: CircularProgressIndicator(
+                                color: AppColors.gold,
+                                strokeWidth: 2.5,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              AppLocalizations.of(ref.watch(langProvider)).loading,
+                              style: const TextStyle(
+                                color: AppColors.goldDim,
+                                fontFamily: 'Cairo',
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -137,15 +162,15 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
                   onRespond: notifier.onPrompt,
                 ),
 
-              // Pick-target overlay (favor/cat play)
+              // Pick-target overlay for Favor card
               if (game.favorPickCardIds != null && state != null)
                 PickTargetOverlay(
-                  title: '',
+                  title: AppLocalizations.of(ref.read(langProvider)).favor,
                   state: state,
                   myPlayerId: widget.playerId,
                   onPick: (targetId) => notifier.sendPlayWithTarget(
                     game.favorPickCardIds!,
-                    {'targetId': targetId},
+                    {'target': targetId}, // server reads payload.payload.target
                   ),
                   onCancel: notifier.cancelFavorPick,
                 ),
@@ -154,6 +179,7 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
               if (state != null && state.status == 'ended')
                 GameOverOverlay(
                   state: state,
+                  myPlayerId: widget.playerId,
                   onBackToLobby: _onLeave,
                 ),
 
@@ -174,6 +200,39 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DisconnectBanner extends ConsumerWidget {
+  const _DisconnectBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tr = AppLocalizations.of(ref.watch(langProvider));
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      color: AppColors.errorRed.withValues(alpha: 0.15),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(
+            width: 10, height: 10,
+            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.errorRed),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            tr.connecting,
+            style: const TextStyle(
+              color: AppColors.errorRed,
+              fontFamily: 'Cairo',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

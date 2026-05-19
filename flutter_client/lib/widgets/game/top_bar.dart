@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/app_strings.dart';
 import '../../models/game_state.dart';
 import '../../providers/lang_provider.dart';
 import '../../theme/app_theme.dart';
@@ -92,11 +93,11 @@ class TopBar extends ConsumerWidget {
               const SoundToggle(),
               const SizedBox(width: 4),
               GestureDetector(
-                onTap: onLeave,
+                onTap: () => _confirmLeave(context, tr),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.crimson.withOpacity(0.6)),
+                    border: Border.all(color: AppColors.crimson.withValues(alpha: 0.6)),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -113,5 +114,35 @@ class TopBar extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmLeave(BuildContext context, AppStrings tr) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text(
+          tr.leaveGame,
+          style: const TextStyle(color: AppColors.goldLight, fontFamily: 'Cairo'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              tr.cancel,
+              style: const TextStyle(color: AppColors.goldDim, fontFamily: 'Cairo'),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              tr.leave,
+              style: const TextStyle(color: AppColors.errorRed, fontFamily: 'Cairo'),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) onLeave();
   }
 }

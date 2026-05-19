@@ -48,16 +48,26 @@ class SocketService {
 
     _socket.on('lobby:update', (data) {
       try {
-        _lobbyUpdController.add(LobbyState.fromJson(Map<String, dynamic>.from(data as Map)));
-      } catch (_) {}
+        _lobbyUpdController.add(
+          LobbyState.fromJson(Map<String, dynamic>.from(data as Map)),
+        );
+      } catch (e, st) {
+        // ignore: avoid_print
+        print('socket lobby:update parse error: $e\n$st');
+      }
     });
 
     _socket.on('lobby:started', (_) => _lobbyStartedCtrl.add(null));
 
     _socket.on('game:state', (data) {
       try {
-        _gameStateCtrl.add(PublicState.fromJson(Map<String, dynamic>.from(data as Map)));
-      } catch (_) {}
+        _gameStateCtrl.add(
+          PublicState.fromJson(Map<String, dynamic>.from(data as Map)),
+        );
+      } catch (e, st) {
+        // ignore: avoid_print
+        print('socket game:state parse error: $e\n$st');
+      }
     });
 
     _socket.on('game:hand', (data) {
@@ -67,7 +77,10 @@ class SocketService {
             .map((c) => CardModel.fromJson(Map<String, dynamic>.from(c as Map)))
             .toList();
         _gameHandCtrl.add(hand);
-      } catch (_) {}
+      } catch (e, st) {
+        // ignore: avoid_print
+        print('socket game:hand parse error: $e\n$st');
+      }
     });
 
     _socket.on('error:msg', (data) {

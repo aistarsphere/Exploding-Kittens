@@ -1,6 +1,11 @@
 import 'card_model.dart';
 import 'prompt_type.dart';
 
+/// Helper: socket.io sometimes returns Map<dynamic, dynamic> for nested objects.
+/// Converts any Map to Map<String, dynamic> safely.
+Map<String, dynamic> _m(dynamic v) =>
+    v == null ? <String, dynamic>{} : Map<String, dynamic>.from(v as Map);
+
 class PlayerState {
   final String id;
   final String name;
@@ -33,7 +38,7 @@ class Pending {
   factory Pending.fromJson(Map<String, dynamic> j) => Pending(
     actorId: j['actorId'] as String,
     kind: j['kind'] as String,
-    payload: (j['payload'] as Map<String, dynamic>?) ?? {},
+    payload: _m(j['payload']),
     expiresAt: (j['expiresAt'] as num).toInt(),
     nopeChain: (j['nopeChain'] as List<dynamic>).cast<String>(),
   );
@@ -42,7 +47,7 @@ class Pending {
     final raw = payload['cards'];
     if (raw == null) return [];
     return (raw as List<dynamic>)
-        .map((c) => CardModel.fromJson(c as Map<String, dynamic>))
+        .map((c) => CardModel.fromJson(_m(c)))
         .toList();
   }
 }
@@ -57,7 +62,7 @@ class Prompt {
   factory Prompt.fromJson(Map<String, dynamic> j) => Prompt(
     type: PromptType.fromString(j['type'] as String),
     forPlayerId: j['forPlayerId'] as String,
-    options: (j['options'] as Map<String, dynamic>?) ?? {},
+    options: _m(j['options']),
   );
 }
 
@@ -109,28 +114,29 @@ class PublicState {
   factory PublicState.fromJson(Map<String, dynamic> j) => PublicState(
     status: j['status'] as String,
     players: (j['players'] as List<dynamic>)
-        .map((p) => PlayerState.fromJson(p as Map<String, dynamic>))
+        .map((p) => PlayerState.fromJson(_m(p)))
         .toList(),
     turnOrder: (j['turnOrder'] as List<dynamic>).cast<String>(),
     turnIdx: (j['turnIdx'] as num).toInt(),
     direction: (j['direction'] as num).toInt(),
     remainingTurns: (j['remainingTurns'] as num).toInt(),
     handCounts: Map<String, int>.fromEntries(
-      (j['handCounts'] as Map<String, dynamic>).entries
-          .map((e) => MapEntry(e.key, (e.value as num).toInt())),
+      _m(j['handCounts']).entries.map(
+        (e) => MapEntry(e.key, (e.value as num).toInt()),
+      ),
     ),
     deckCount: (j['deckCount'] as num).toInt(),
     topDiscard: j['topDiscard'] != null
-        ? CardModel.fromJson(j['topDiscard'] as Map<String, dynamic>)
+        ? CardModel.fromJson(_m(j['topDiscard']))
         : null,
     pending: j['pending'] != null
-        ? Pending.fromJson(j['pending'] as Map<String, dynamic>)
+        ? Pending.fromJson(_m(j['pending']))
         : null,
     prompt: j['prompt'] != null
-        ? Prompt.fromJson(j['prompt'] as Map<String, dynamic>)
+        ? Prompt.fromJson(_m(j['prompt']))
         : null,
     log: (j['log'] as List<dynamic>)
-        .map((e) => LogEntry.fromJson(e as Map<String, dynamic>))
+        .map((e) => LogEntry.fromJson(_m(e)))
         .toList(),
     winnerId: j['winnerId'] as String?,
     currentPlayerId: j['currentPlayerId'] as String,
