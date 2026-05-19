@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSocket, emitAck } from '@/lib/useSocket';
+import { useLang } from '@/lib/LanguageContext';
+import LanguageToggle from '@/components/LanguageToggle';
 import styles from './lobby.module.css';
 
 type Step = 'start' | 'join' | 'lobby';
@@ -12,6 +14,7 @@ interface Lobby { code: string; hostId: string | null; started: boolean; players
 export default function LobbyPage() {
   const { socket, connected } = useSocket();
   const router = useRouter();
+  const { tr } = useLang();
   const [step, setStep] = useState<Step>('start');
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
@@ -60,11 +63,11 @@ export default function LobbyPage() {
 
   async function onCreate() {
     setError('');
-    if (!name.trim()) { setError('Please enter your name.'); return; }
+    if (!name.trim()) { setError(tr.errEnterName); return; }
     const res = await emitAck<{ ok: boolean; error?: string; code: string; playerId: string }>(
       socket, 'lobby:create', { name: name.trim() },
     );
-    if (!res.ok) { setError(res.error || 'Failed.'); return; }
+    if (!res.ok) { setError(res.error || tr.errFailed); return; }
     setMyPlayerId(res.playerId);
     setMyRoomCode(res.code);
     persist(res.code, res.playerId);
@@ -73,12 +76,12 @@ export default function LobbyPage() {
 
   async function onJoinGo() {
     setJoinError('');
-    if (!name.trim()) { setJoinError('Please enter your name.'); return; }
-    if (!code.trim()) { setJoinError('Enter a room code.'); return; }
+    if (!name.trim()) { setJoinError(tr.errEnterName); return; }
+    if (!code.trim()) { setJoinError(tr.errEnterCode); return; }
     const res = await emitAck<{ ok: boolean; error?: string; code: string; playerId: string }>(
       socket, 'lobby:join', { code: code.trim().toUpperCase(), name: name.trim() },
     );
-    if (!res.ok) { setJoinError(res.error || 'Failed.'); return; }
+    if (!res.ok) { setJoinError(res.error || tr.errFailed); return; }
     setMyPlayerId(res.playerId);
     setMyRoomCode(res.code);
     persist(res.code, res.playerId);
@@ -87,7 +90,7 @@ export default function LobbyPage() {
 
   async function onStart() {
     const res = await emitAck<{ ok: boolean; error?: string }>(socket, 'lobby:start', {});
-    if (!res.ok) alert(res.error || 'Failed to start.');
+    if (!res.ok) alert(res.error || tr.errFailedStart);
   }
 
   async function onLeave() {
@@ -104,23 +107,26 @@ export default function LobbyPage() {
   return (
     <main className={styles.page}>
       <div className={styles.lobby}>
-        <h1 className={styles.title}>💥 Exploding Kittens</h1>
-        <p className={styles.subtitle}>Online multiplayer · 2–10 players</p>
+        <div className={styles.langRow}>
+          <LanguageToggle />
+        </div>
+        <h1 className={styles.title}>{tr.title}</h1>
+        <p className={styles.subtitle}>{tr.subtitle}</p>
         {!connected && (
           <p className={styles.error} role="status">
-            Connecting to server…
+            {tr.connecting}
           </p>
         )}
 
         {step === 'start' && (
           <section className={styles.card}>
-            <label className={styles.label} htmlFor="name">Your name</label>
+            <label className={styles.label} htmlFor="name">{tr.yourName}</label>
             <input id="name" className={styles.input} type="text" maxLength={24}
-              placeholder="e.g. Whiskers" autoComplete="off"
+              placeholder={tr.namePlaceholder} autoComplete="off"
               value={name} onChange={e => setName(e.target.value)} />
             <div className={styles.row}>
-              <button className={`${styles.button} ${styles.primary}`} onClick={onCreate}>Create Room</button>
-              <button className={styles.button} onClick={() => setStep('join')}>Join Room</button>
+              <button className={`${styles.button} ${styles.primary}`} onClick={onCreate}>{tr.createRoom}</button>
+              <button className={styles.button} onClick={() => setStep('join')}>{tr.joinRoom}</button>
             </div>
             <p className={styles.error}>{error}</p>
           </section>
@@ -128,13 +134,13 @@ export default function LobbyPage() {
 
         {step === 'join' && (
           <section className={styles.card}>
-            <label className={styles.label} htmlFor="code">Room code</label>
+            <label className={styles.label} htmlFor="code">{tr.roomCode}</label>
             <input id="code" className={`${styles.input} ${styles.code}`} type="text" maxLength={4}
-              placeholder="ABCD" autoComplete="off"
+              placeholder={tr.codePlaceholder} autoComplete="off"
               value={code} onChange={e => setCode(e.target.value.toUpperCase())} />
             <div className={styles.row}>
-              <button className={`${styles.button} ${styles.primary}`} onClick={onJoinGo}>Join</button>
-              <button className={styles.button} onClick={() => setStep('start')}>Back</button>
+              <button className={`${styles.button} ${styles.primary}`} onClick={onJoinGo}>{tr.join}</button>
+              <button className={styles.button} onClick={() => setStep('start')}>{tr.back}</button>
             </div>
             <p className={styles.error}>{joinError}</p>
           </section>
@@ -142,28 +148,28 @@ export default function LobbyPage() {
 
         {step === 'lobby' && (
           <section className={styles.card}>
-            <h2>Room <span>{myRoomCode}</span></h2>
+            <h2>{tr.room} <span>{myRoomCode}</span></h2>
             <p className={styles.subtitle}>
-              {isHost ? 'You are the master.' : 'Waiting for the master to start…'}
+              {isHost ? tr.youAreMaster : tr.waitingForMaster}
             </p>
             <ul className={styles.list}>
               {(lobby?.players || []).map(p => (
                 <li key={p.id}>
-                  <span>{p.name}{p.id === myPlayerId ? ' (you)' : ''}</span>
+                  <span>{p.name}{p.id === myPlayerId ? tr.you : ''}</span>
                   <span>
-                    {p.id === lobby?.hostId && <span className={styles.badge}>master</span>}
-                    {!p.connected && <span className={`${styles.badge} ${styles.off}`}>offline</span>}
+                    {p.id === lobby?.hostId && <span className={styles.badge}>{tr.master}</span>}
+                    {!p.connected && <span className={`${styles.badge} ${styles.off}`}>{tr.offline}</span>}
                   </span>
                 </li>
               ))}
             </ul>
             <div className={styles.row}>
               {isHost && (lobby?.players.length ?? 0) >= 2 && (
-                <button className={`${styles.button} ${styles.primary}`} onClick={onStart}>Start Game</button>
+                <button className={`${styles.button} ${styles.primary}`} onClick={onStart}>{tr.startGame}</button>
               )}
-              <button className={styles.button} onClick={onLeave}>Leave</button>
+              <button className={styles.button} onClick={onLeave}>{tr.leave}</button>
             </div>
-            <p className={styles.hint}>Share the room code with friends so they can join.</p>
+            <p className={styles.hint}>{tr.shareHint}</p>
           </section>
         )}
       </div>

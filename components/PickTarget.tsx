@@ -1,5 +1,6 @@
 'use client';
 
+import { useLang } from '@/lib/LanguageContext';
 import type { PublicState } from '@/lib/gameEngine';
 import styles from '@/app/game/game.module.css';
 
@@ -11,13 +12,12 @@ interface Props {
   onCancel: () => void;
 }
 
-// Used when the local player needs to pick a target *before* the action is sent
-// (e.g. choosing the Favor target).
 export default function PickTarget({ title, state, myPlayerId, onPick, onCancel }: Props) {
+  const { tr } = useLang();
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modal}>
-        <h3>Pick a player</h3>
+        <h3>{tr.pickAPlayer}</h3>
         <p>{title}</p>
         <div className={styles.playerRow}>
           {state.players
@@ -27,7 +27,7 @@ export default function PickTarget({ title, state, myPlayerId, onPick, onCancel 
             ))}
         </div>
         <div className={styles.modalActions}>
-          <button className={styles.secondary} onClick={onCancel}>Cancel</button>
+          <button className={styles.secondary} onClick={onCancel}>{tr.cancel}</button>
         </div>
       </div>
     </div>

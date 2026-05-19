@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Card from './Card';
-import { META, TYPES, type Card as CardData, type CardType } from '@/lib/cardTypes';
+import { TYPES, type Card as CardData, type CardType } from '@/lib/cardTypes';
+import { useLang } from '@/lib/LanguageContext';
+import { getCardMeta } from '@/lib/i18n';
 import type { PublicState, Prompt } from '@/lib/gameEngine';
 import { sfx } from '@/lib/sfx';
 import styles from '@/app/game/game.module.css';
@@ -14,16 +16,16 @@ interface Props {
 }
 
 export default function PromptModal({ state, myPlayerId, onRespond }: Props) {
+  const { tr } = useLang();
   const prompt = state.prompt;
   if (!prompt) return null;
 
-  // If the prompt is for someone else, show a passive notice.
   if (prompt.forPlayerId !== myPlayerId) {
     const target = state.players.find(p => p.id === prompt.forPlayerId);
     return (
       <Overlay>
-        <Modal title={`Waiting for ${target?.name ?? 'player'}`}>
-          <p>They are responding to {prompt.type}…</p>
+        <Modal title={tr.waitingFor(target?.name ?? 'player')}>
+          <p>{tr.respondingTo(prompt.type)}</p>
         </Modal>
       </Overlay>
     );
@@ -33,8 +35,8 @@ export default function PromptModal({ state, myPlayerId, onRespond }: Props) {
     case 'see-future':       return <SeeFuture prompt={prompt} onRespond={onRespond} />;
     case 'alter-future':     return <AlterFuture prompt={prompt} onRespond={onRespond} />;
     case 'favor-give':       return <FavorGive prompt={prompt} state={state} onRespond={onRespond} />;
-    case 'cat-pair-target':  return <PickPlayer prompt={prompt} state={state} title="Steal a random card — pick a target" onRespond={onRespond} />;
-    case 'cat-trio-target':  return <PickPlayer prompt={prompt} state={state} title="Name a card to steal — pick a target" onRespond={onRespond} />;
+    case 'cat-pair-target':  return <PickPlayer prompt={prompt} state={state} titleKey="stealRandom" onRespond={onRespond} />;
+    case 'cat-trio-target':  return <PickPlayer prompt={prompt} state={state} titleKey="nameCardSteal" onRespond={onRespond} />;
     case 'cat-trio-name':    return <CatTrioName onRespond={onRespond} />;
     case 'defuse-reinsert':  return <DefuseReinsert prompt={prompt} onRespond={onRespond} />;
     default: return null;
@@ -55,12 +57,13 @@ function Modal({ title, children, actions }: { title: string; children: React.Re
 }
 
 function SeeFuture({ prompt, onRespond }: { prompt: Prompt; onRespond: (r: Record<string, unknown>) => void }) {
+  const { tr } = useLang();
   const cards = (prompt.options.cards as CardData[]) || [];
   return (
     <Overlay>
-      <Modal title="See the Future"
-        actions={<button onClick={() => onRespond({})}>OK</button>}>
-        <p>Top 3 cards (top first):</p>
+      <Modal title={tr.seeFuture}
+        actions={<button onClick={() => onRespond({})}>{tr.ok}</button>}>
+        <p>{tr.top3Cards}</p>
         <div className={styles.cardRow}>
           {cards.map(c => <Card key={c.id} card={c} />)}
         </div>
@@ -70,6 +73,7 @@ function SeeFuture({ prompt, onRespond }: { prompt: Prompt; onRespond: (r: Recor
 }
 
 function AlterFuture({ prompt, onRespond }: { prompt: Prompt; onRespond: (r: Record<string, unknown>) => void }) {
+  const { tr } = useLang();
   const initial = (prompt.options.cards as CardData[]) || [];
   const [remaining, setRemaining] = useState<CardData[]>(initial);
   const [order, setOrder] = useState<CardData[]>([]);
@@ -89,18 +93,18 @@ function AlterFuture({ prompt, onRespond }: { prompt: Prompt; onRespond: (r: Rec
 
   return (
     <Overlay>
-      <Modal title="Alter the Future"
+      <Modal title={tr.alterFuture}
         actions={
           <>
-            <button className={styles.secondary} onClick={reset}>Reset</button>
-            <button onClick={confirm} disabled={order.length !== initial.length}>Confirm</button>
+            <button className={styles.secondary} onClick={reset}>{tr.reset}</button>
+            <button onClick={confirm} disabled={order.length !== initial.length}>{tr.confirm}</button>
           </>
         }>
-        <p>Click cards in the order you want them at top:</p>
+        <p>{tr.clickCardsOrder}</p>
         <div className={styles.cardRow}>
           {remaining.map(c => <Card key={c.id} card={c} onClick={() => pick(c)} />)}
         </div>
-        <p><i style={{ opacity: 0.7 }}>New order (top → bottom):</i></p>
+        <p><i style={{ opacity: 0.7 }}>{tr.newOrder}</i></p>
         <div className={styles.cardRow}>
           {order.map(c => <Card key={c.id} card={c} />)}
         </div>
@@ -110,12 +114,13 @@ function AlterFuture({ prompt, onRespond }: { prompt: Prompt; onRespond: (r: Rec
 }
 
 function FavorGive({ prompt, state, onRespond }: { prompt: Prompt; state: PublicState; onRespond: (r: Record<string, unknown>) => void }) {
+  const { tr } = useLang();
   const cards = (prompt.options.cards as CardData[]) || [];
   const target = state.players.find(p => p.id === (prompt.options.toPlayerId as string));
   return (
     <Overlay>
-      <Modal title="Favor">
-        <p>Give one card to <b>{target?.name ?? '?'}</b>:</p>
+      <Modal title={tr.favor}>
+        <p>{tr.giveCardTo(target?.name ?? '?')}</p>
         <div className={styles.cardRow}>
           {cards.map(c => (
             <Card key={c.id} card={c} onClick={() => onRespond({ cardId: c.id })} />
@@ -126,14 +131,15 @@ function FavorGive({ prompt, state, onRespond }: { prompt: Prompt; state: Public
   );
 }
 
-function PickPlayer({ prompt, state, title, onRespond }: {
-  prompt: Prompt; state: PublicState; title: string; onRespond: (r: Record<string, unknown>) => void;
+function PickPlayer({ prompt, state, titleKey, onRespond }: {
+  prompt: Prompt; state: PublicState; titleKey: 'stealRandom' | 'nameCardSteal'; onRespond: (r: Record<string, unknown>) => void;
 }) {
+  const { tr } = useLang();
   const candidates = (prompt.options.candidates as string[]) || [];
   return (
     <Overlay>
-      <Modal title="Pick a target">
-        <p>{title}</p>
+      <Modal title={tr.pickTarget}>
+        <p>{tr[titleKey]}</p>
         <div className={styles.playerRow}>
           {candidates.map(pid => {
             const p = state.players.find(x => x.id === pid);
@@ -150,6 +156,7 @@ function PickPlayer({ prompt, state, title, onRespond }: {
 }
 
 function CatTrioName({ onRespond }: { onRespond: (r: Record<string, unknown>) => void }) {
+  const { lang, tr } = useLang();
   const types: CardType[] = [
     TYPES.ATTACK, TYPES.SKIP, TYPES.FAVOR, TYPES.SHUFFLE,
     TYPES.SEE_THE_FUTURE, TYPES.ALTER_THE_FUTURE,
@@ -161,12 +168,12 @@ function CatTrioName({ onRespond }: { onRespond: (r: Record<string, unknown>) =>
   ];
   return (
     <Overlay>
-      <Modal title="Name a card">
-        <p>Name a card to take from the target:</p>
+      <Modal title={tr.nameACard}>
+        <p>{tr.nameCardTake}</p>
         <div className={styles.playerRow}>
           {types.map(t => (
             <button key={t} onClick={() => onRespond({ namedType: t })}>
-              {META[t].label}
+              {getCardMeta(t, lang).label}
             </button>
           ))}
         </div>
@@ -176,18 +183,19 @@ function CatTrioName({ onRespond }: { onRespond: (r: Record<string, unknown>) =>
 }
 
 function DefuseReinsert({ prompt, onRespond }: { prompt: Prompt; onRespond: (r: Record<string, unknown>) => void }) {
+  const { tr } = useLang();
   const deckSize = (prompt.options.deckSize as number) ?? 0;
   const [pos, setPos] = useState(Math.floor(deckSize / 2));
   useEffect(() => { sfx.play('tick'); }, []);
   return (
     <Overlay>
-      <Modal title="Defuse!"
-        actions={<button onClick={() => onRespond({ position: pos })}>Reinsert</button>}>
-        <p>Reinsert the Exploding Kitten:</p>
+      <Modal title={tr.defuse}
+        actions={<button onClick={() => onRespond({ position: pos })}>{tr.reinsert}</button>}>
+        <p>{tr.reinsertKitten}</p>
         <input type="range" min={0} max={deckSize} value={pos}
           onChange={e => setPos(parseInt(e.target.value, 10))} style={{ width: '100%' }} />
-        <p>Position from top: <span>{pos}</span> / {deckSize}</p>
-        <small>0 = next card drawn · {deckSize} = bottom of deck</small>
+        <p>{tr.positionFromTop(pos, deckSize)}</p>
+        <small>{tr.positionHint(deckSize)}</small>
       </Modal>
     </Overlay>
   );

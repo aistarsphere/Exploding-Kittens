@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { META, IMAGE_FILE, type Card as CardData } from '@/lib/cardTypes';
+import { IMAGE_FILE, type Card as CardData } from '@/lib/cardTypes';
+import { getCardMeta } from '@/lib/i18n';
+import { useLang } from '@/lib/LanguageContext';
 import styles from './Card.module.css';
 
 interface Props {
@@ -12,8 +14,9 @@ interface Props {
 }
 
 export default function Card({ card, selected, faceDown, onClick }: Props) {
-  const type = card?.type as keyof typeof META | undefined;
-  const meta = type ? META[type] : undefined;
+  const { lang } = useLang();
+  const type = card?.type as Parameters<typeof getCardMeta>[0] | undefined;
+  const meta = type ? getCardMeta(type, lang) : undefined;
   const imgFile = type ? IMAGE_FILE[type] : undefined;
   const [imgFailed, setImgFailed] = useState(false);
 

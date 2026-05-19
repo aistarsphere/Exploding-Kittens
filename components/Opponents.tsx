@@ -1,9 +1,11 @@
 'use client';
 
+import { useLang } from '@/lib/LanguageContext';
 import styles from '@/app/game/game.module.css';
 import type { PublicState } from '@/lib/gameEngine';
 
 export default function Opponents({ state, myPlayerId }: { state: PublicState; myPlayerId: string }) {
+  const { tr } = useLang();
   return (
     <section className={styles.opponents}>
       {state.players
@@ -18,7 +20,7 @@ export default function Opponents({ state, myPlayerId }: { state: PublicState; m
             <div key={p.id} className={classes.join(' ')}>
               <div style={{ fontWeight: 600 }}>{p.name}</div>
               <div style={{ fontSize: '0.85rem', opacity: 0.8 }}>
-                {cnt} cards{p.alive ? '' : ' (out)'}
+                {tr.cards(cnt)}{p.alive ? '' : ` ${tr.out}`}
               </div>
             </div>
           );
