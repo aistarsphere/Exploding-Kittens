@@ -6,6 +6,7 @@ import '../models/card_model.dart';
 
 class SocketService {
   final String serverUrl;
+  final String socketPath;
   late final io.Socket _socket;
 
   final _connController   = StreamController<bool>.broadcast();
@@ -27,9 +28,10 @@ class SocketService {
   bool _connected = false;
   bool get connected => _connected;
 
-  SocketService(this.serverUrl) {
+  SocketService(this.serverUrl, {this.socketPath = '/socket.io'}) {
     _socket = io.io(serverUrl, io.OptionBuilder()
       .setTransports(['websocket', 'polling'])
+      .setPath(socketPath)
       .enableAutoConnect()
       .build());
 
