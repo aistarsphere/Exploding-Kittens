@@ -16,8 +16,8 @@ const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL;
 export function getSharedSocket(): Socket {
   if (!sharedSocket) {
     sharedSocket = SOCKET_URL
-      ? io(SOCKET_URL, { autoConnect: true, transports: ['websocket', 'polling'] })
-      : io({ autoConnect: true });
+      ? io(SOCKET_URL, { autoConnect: true, transports: ['websocket', 'polling'], path: '/kittens/socket.io/' })
+      : io({ autoConnect: true, path: '/kittens/socket.io/' });
   }
   return sharedSocket;
 }

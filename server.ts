@@ -24,7 +24,7 @@ nextApp.prepare().then(() => {
     handle(req, res, parsedUrl);
   });
 
-  const io = new IOServer(httpServer, { cors: { origin: '*' } });
+  const io = new IOServer(httpServer, { path: '/kittens/socket.io/', cors: { origin: '*' } });
   setupSockets(io, rooms);
 
   httpServer.listen(port, host, () => {

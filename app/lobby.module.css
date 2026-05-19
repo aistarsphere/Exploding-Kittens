@@ -15,7 +15,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background-image: url('/images/intro.jpeg');
+  background-image: url('/kittens/images/intro.jpeg');
   background-size: cover;
   background-position: center;
   opacity: 0.32;

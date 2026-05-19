@@ -47,7 +47,7 @@ export default function Card({ card, selected, faceDown, onClick }: Props) {
         <img
           className={styles.art}
           alt={meta.label}
-          src={`/images/${imgFile}`}
+          src={`/kittens/images/${imgFile}`}
           onError={() => setImgFailed(true)}
         />
       </div>
