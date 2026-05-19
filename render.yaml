@@ -1,0 +1,19 @@
+# Render blueprint: deploys the WebSocket-only server for game state.
+# After creating this service, copy the public URL it returns and set
+# NEXT_PUBLIC_SOCKET_URL=<that-url> in your Vercel project's env vars.
+#
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: exploding-kittens-ws
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run ws
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: CORS_ORIGINS
+        # Replace with your Vercel URL(s), comma-separated. Use * to allow any.
+        value: "*"

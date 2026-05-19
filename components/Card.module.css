@@ -1,0 +1,126 @@
+/* Black Jacket-style cards: aged parchment frame, dark border, slight stained look. */
+
+.card {
+  position: relative;
+  width: 104px;
+  height: 144px;
+  border-radius: 6px;
+  background: #e8d5a8;
+  color: #2a1810;
+  border: 2px solid #1a0806;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.18s cubic-bezier(.2,.6,.2,1), box-shadow 0.18s, filter 0.18s;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* Stack: outer dark border, inner gold thread, paper, drop shadow */
+  box-shadow:
+    0 5px 14px rgba(0,0,0,0.65),
+    inset 0 0 0 2px rgba(232,213,168,0.9),
+    inset 0 0 0 3px rgba(74,26,18,0.7),
+    inset 0 0 30px rgba(74,26,18,0.18);
+}
+.card.cssBg {
+  background:
+    linear-gradient(160deg, var(--bg, #6a3a28) 0%, color-mix(in srgb, var(--bg, #6a3a28) 35%, #1a0806) 100%);
+}
+.card:hover {
+  filter: brightness(1.1);
+  box-shadow:
+    0 12px 22px rgba(0,0,0,0.75),
+    0 0 0 1px #c0392b,
+    inset 0 0 0 2px rgba(232,213,168,0.9),
+    inset 0 0 0 3px rgba(74,26,18,0.7);
+}
+.selected {
+  filter: brightness(1.18);
+  border-color: #f1c40f;
+  box-shadow:
+    0 16px 28px rgba(0,0,0,0.8),
+    0 0 0 2px #f1c40f,
+    0 0 28px rgba(241,196,15,0.7),
+    inset 0 0 0 2px rgba(232,213,168,0.9),
+    inset 0 0 0 3px rgba(74,26,18,0.7);
+}
+.selected::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 8px;
+  border: 1px dashed rgba(241,196,15,0.5);
+  pointer-events: none;
+  animation: ek-card-ring 1.4s linear infinite;
+}
+@keyframes ek-card-ring {
+  to { transform: rotate(360deg); }
+}
+.inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 5px 6px;
+  height: 100%;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  color: #f0e0c0;
+}
+.labelTop {
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1.05;
+  padding: 3px 4px;
+  background: rgba(26, 8, 6, 0.78);
+  border: 1px solid rgba(241,196,15,0.35);
+  border-radius: 3px;
+  width: calc(100% - 4px);
+  color: #f5e8c8;
+}
+.emoji {
+  font-size: 2.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+}
+.desc {
+  font-size: 0.55rem;
+  font-weight: 500;
+  opacity: 0.95;
+  line-height: 1.15;
+  max-height: 38px;
+  overflow: hidden;
+  padding: 0 2px;
+  color: #f0d8b0;
+}
+.art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: contrast(1.05) saturate(0.95);
+}
+.faceDown {
+  background:
+    repeating-linear-gradient(45deg, #2a0e0a 0 6px, #1a0805 6px 12px) !important;
+  border-color: #c0392b !important;
+  box-shadow:
+    0 5px 14px rgba(0,0,0,0.65),
+    inset 0 0 0 2px rgba(241,196,15,0.18),
+    inset 0 0 18px rgba(0,0,0,0.7) !important;
+}
+.faceDown .emoji {
+  font-size: 2.6rem;
+  color: rgba(241,196,15,0.5);
+}
+.faceDown .labelTop {
+  color: #f1c40f;
+  background: rgba(0,0,0,0.7);
+  border-color: rgba(241,196,15,0.5);
+}
+
+@media (max-width: 600px) {
+  .card { width: 84px; height: 116px; }
+  .emoji { font-size: 1.6rem; }
+}

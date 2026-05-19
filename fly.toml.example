@@ -1,0 +1,22 @@
+# Example fly.io config for the WS-only server.
+# Rename this file to `fly.toml` and run `fly launch --no-deploy`, then `fly deploy`.
+
+app = "exploding-kittens-ws"
+primary_region = "iad"   # change to your nearest region
+
+[build]
+
+[env]
+  PORT = "8080"
+  CORS_ORIGINS = "*"     # replace with your Vercel URL(s) once deployed
+
+[processes]
+  app = "npm run ws"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0   # bump to 1 for stable lobbies (no cold starts)
+  processes = ["app"]
