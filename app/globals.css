@@ -5,11 +5,16 @@ html, body {
   min-height: 100vh;
   background: #000;
   color: #f0f0f0;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
 }
 body {
   font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* Prevent overscroll bounce on iOS so the game table feels stable. */
+  overscroll-behavior: none;
 }
-button { font-family: inherit; }
+button { font-family: inherit; touch-action: manipulation; }
+input { font-family: inherit; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #0a0a0a; }
 ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
@@ -23,3 +28,36 @@ button { font-family: inherit; }
     scroll-behavior: auto !important;
   }
 }
+
+/* Screen-shake (applied to <body> by JuiceLayer) */
+@keyframes ek-shake-light {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-2px, 1px); }
+  40% { transform: translate(2px, -1px); }
+  60% { transform: translate(-1px, 2px); }
+  80% { transform: translate(1px, -2px); }
+}
+@keyframes ek-shake-medium {
+  0%, 100% { transform: translate(0, 0); }
+  15% { transform: translate(-5px, 2px) rotate(-0.2deg); }
+  30% { transform: translate(4px, -3px) rotate(0.2deg); }
+  45% { transform: translate(-3px, 4px) rotate(-0.15deg); }
+  60% { transform: translate(5px, -2px) rotate(0.15deg); }
+  75% { transform: translate(-2px, 3px); }
+  90% { transform: translate(2px, -2px); }
+}
+@keyframes ek-shake-heavy {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  10% { transform: translate(-9px, 4px) rotate(-0.4deg); }
+  20% { transform: translate(8px, -6px) rotate(0.4deg); }
+  30% { transform: translate(-7px, 7px) rotate(-0.3deg); }
+  40% { transform: translate(9px, -4px) rotate(0.3deg); }
+  50% { transform: translate(-6px, 5px) rotate(-0.25deg); }
+  60% { transform: translate(7px, -7px) rotate(0.25deg); }
+  70% { transform: translate(-5px, 4px); }
+  80% { transform: translate(4px, -3px); }
+  90% { transform: translate(-2px, 2px); }
+}
+body.shake-light  { animation: ek-shake-light 0.28s ease-out; }
+body.shake-medium { animation: ek-shake-medium 0.45s ease-out; }
+body.shake-heavy  { animation: ek-shake-heavy 0.6s ease-out; }

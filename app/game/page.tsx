@@ -12,6 +12,10 @@ import NopeBanner from '@/components/NopeBanner';
 import PromptModal from '@/components/PromptModal';
 import PickTarget from '@/components/PickTarget';
 import GameOver from '@/components/GameOver';
+import JuiceLayer from '@/components/JuiceLayer';
+import SoundToggle from '@/components/SoundToggle';
+import { onStateChange as juiceOnStateChange } from '@/lib/juice';
+import { sfx } from '@/lib/sfx';
 import styles from './game.module.css';
 
 export default function GamePage() {
@@ -54,8 +58,14 @@ function GameInner() {
   }, [socket, myRoomCode, myPlayerId, router]);
 
   // Wire events.
+  const prevStateRef = useRef<PublicState | null>(null);
   useEffect(() => {
     const onState = (s: PublicState) => {
+      // Fire juice (sound + particles + floating text) before storing the new
+      // state. The previous state is held in a ref so this comparison is
+      // deterministic regardless of React's render timing.
+      juiceOnStateChange(prevStateRef.current, s);
+      prevStateRef.current = s;
       setState(s);
       setSelectedIds(prev => {
         // No-op; hand-id pruning happens below when hand arrives.
@@ -103,6 +113,8 @@ function GameInner() {
   }, [state?.currentPlayerId, state?.status, myPlayerId, state]);
 
   function toggleCard(id: string) {
+    sfx.play('tap');
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate?.(8);
     setSelectedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -160,7 +172,10 @@ function GameInner() {
       <header className={styles.topbar}>
         <div>Room <span>{myRoomCode}</span></div>
         <div className={styles.turnInfo}>{turnText}</div>
-        <button className={styles.leaveBtn} onClick={onLeave}>Leave</button>
+        <div className={styles.topbarRight}>
+          <SoundToggle />
+          <button className={styles.leaveBtn} onClick={onLeave}>Leave</button>
+        </div>
       </header>
 
       {state && <Opponents state={state} myPlayerId={myPlayerId} />}
@@ -217,6 +232,8 @@ function GameInner() {
 
       {toast && <div className={styles.toast}>{toast}</div>}
       {turnFlash && <div className={styles.turnFlash}>Your turn!</div>}
+
+      <JuiceLayer />
     </main>
   );
 }

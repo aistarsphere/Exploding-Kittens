@@ -14,9 +14,13 @@
 .slot:not(:first-child) {
   margin-left: var(--overlap, 0px);
 }
-.slot:hover {
-  transform: rotate(0deg) translateY(-16px) scale(1.08);
-  z-index: 30;
+/* Only apply hover lift on real pointers — touch devices fire :hover after
+   tap, which causes "sticky" lifted cards. The .selected state still works. */
+@media (hover: hover) {
+  .slot:hover {
+    transform: rotate(0deg) translateY(-16px) scale(1.08);
+    z-index: 30;
+  }
 }
 @keyframes hand-deal {
   from { opacity: 0; transform: translateY(80px) rotate(0deg); }

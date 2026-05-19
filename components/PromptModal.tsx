@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Card from './Card';
 import { META, TYPES, type Card as CardData, type CardType } from '@/lib/cardTypes';
 import type { PublicState, Prompt } from '@/lib/gameEngine';
+import { sfx } from '@/lib/sfx';
 import styles from '@/app/game/game.module.css';
 
 interface Props {
@@ -177,6 +178,7 @@ function CatTrioName({ onRespond }: { onRespond: (r: Record<string, unknown>) =>
 function DefuseReinsert({ prompt, onRespond }: { prompt: Prompt; onRespond: (r: Record<string, unknown>) => void }) {
   const deckSize = (prompt.options.deckSize as number) ?? 0;
   const [pos, setPos] = useState(Math.floor(deckSize / 2));
+  useEffect(() => { sfx.play('tick'); }, []);
   return (
     <Overlay>
       <Modal title="Defuse!"

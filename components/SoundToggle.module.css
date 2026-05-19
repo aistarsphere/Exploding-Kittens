@@ -1,0 +1,18 @@
+.toggle {
+  background: rgba(0,0,0,0.55);
+  color: #f0e0c0;
+  border: 1px solid rgba(241,196,15,0.25);
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.toggle:hover { background: rgba(0,0,0,0.75); border-color: rgba(241,196,15,0.4); color: #f1c40f; }
+@media (max-width: 600px) {
+  .toggle { width: 28px; height: 28px; }
+}

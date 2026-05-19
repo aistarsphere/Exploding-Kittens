@@ -204,3 +204,24 @@
   border: 1px solid rgba(241,196,15,0.3);
 }
 .badge.off { background: #2a1612; color: #a08870; border-color: rgba(241,196,15,0.1); }
+
+@media (max-width: 600px) {
+  .page { padding: 12px max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-bottom)); }
+  .lobby { width: 100%; max-width: 420px; }
+  .title { font-size: 2rem; letter-spacing: 1px; }
+  .subtitle { font-size: 0.78rem; margin-bottom: 18px; }
+  .card { padding: 22px 18px; }
+  .card h2 { font-size: 1.05rem; }
+  .card h2 span { font-size: 1.2rem; letter-spacing: 3px; }
+  .label { font-size: 0.72rem; }
+  .input { padding: 12px 13px; font-size: 0.95rem; }
+  .code { letter-spacing: 7px; font-size: 1.3rem; }
+  .button { padding: 12px 12px; font-size: 0.82rem; letter-spacing: 1px; }
+  .list li { padding: 9px 12px; font-size: 0.88rem; }
+  .badge { font-size: 0.62rem; padding: 2px 8px; }
+}
+@media (max-width: 380px) {
+  .title { font-size: 1.7rem; }
+  .row { flex-direction: column; gap: 8px; }
+  .button { width: 100%; }
+}

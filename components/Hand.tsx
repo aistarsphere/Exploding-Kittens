@@ -25,18 +25,17 @@ function useHandOverlap(count: number): number {
   }, []);
 
   if (count <= 1) return 0;
-  const cardW = vw < 600 ? 84 : 104;       // matches Card.module.css widths
-  const gap = 8;                            // matches .hand gap
-  const padding = 64;                       // page side padding budget
-  const available = Math.max(200, vw - padding);
-  // Width if no overlap (only first card pays no margin-left).
+  // Must match Card.module.css breakpoints.
+  let cardW = 104, gap = 8, padding = 64;
+  if (vw <= 380) { cardW = 66; gap = 4; padding = 24; }
+  else if (vw <= 600) { cardW = 78; gap = 4; padding = 28; }
+  else if (vw <= 820) { cardW = 92; gap = 8; padding = 40; }
+  const available = Math.max(160, vw - padding);
   const fullWidth = count * cardW + (count - 1) * gap;
   if (fullWidth <= available) return 0;
-  // Required negative margin per gap to fit.
   const needed = (fullWidth - available) / (count - 1);
-  // Cap the overlap so a sliver of each card is still visible.
-  const maxOverlap = cardW * 0.65;
-  return -Math.min(maxOverlap, needed + gap); // negative margin
+  const maxOverlap = cardW * 0.72;
+  return -Math.min(maxOverlap, needed + gap);
 }
 
 export default function Hand({ hand, selectedIds, onToggle }: Props) {

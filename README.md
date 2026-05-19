@@ -29,34 +29,24 @@ Find your local IP (`ipconfig` on Windows or `ifconfig` / `ip a` on Linux). Frie
 
 ### Deploy
 
-There are two supported topologies:
+**Recommended: single-service on Render (or any Node host)**
 
-**A. Single host (Render / Railway / Fly.io / your own VM)** — easiest
+The whole app — Next.js + Socket.IO — runs in one process via `server.ts`. One service, one URL, no env vars to wire up.
 
-The combined `server.ts` runs Next.js + Socket.IO in one Node process.
-- Build: `npm run build`
-- Start: `npm start` (runs `tsx server.ts`)
-- `PORT` is read from env automatically.
-- Vercel cannot run this — its serverless functions don't keep WebSocket connections alive.
+1. Push this repo to GitHub.
+2. Go to https://dashboard.render.com → **New +** → **Blueprint** → pick your repo.
+3. Render reads `render.yaml` automatically. Click **Apply**.
+4. First deploy takes 3–5 min (`npm install` + `npm run build`, then `npm start`). When status is **Live**, open the URL — the lobby should load and "Connecting to server…" disappears within a second.
 
-**B. Vercel frontend + separate WS host** — when you want the Next.js side on Vercel
+That's it. Same architecture works on Railway (start command `npm start`), Fly.io (see `fly.toml.example`), or any VM.
 
-The frontend deploys to Vercel; the Socket.IO + game engine deploys separately as `ws-server.ts` to any Node host.
+**Why not Vercel?** Vercel runs Next.js as serverless functions, which die after each request and can't hold WebSocket connections open. The game engine needs a long-lived process with shared in-memory state. The architecture here is incompatible with Vercel's model.
 
-1. **Push the repo to GitHub.**
-2. **Deploy the WS server first.** On Render, click "New → Blueprint" and point it at this repo — `render.yaml` does the rest. (`fly.toml.example` is a Fly.io starter; for Railway, choose "Empty service" → set start command `npm run ws`.) After deploy, copy the public URL — something like `https://exploding-kittens-ws.onrender.com`.
-3. **Deploy the Next.js side to Vercel.** Import the same repo. Vercel auto-detects Next.js. Add a single env var:
-   ```
-   NEXT_PUBLIC_SOCKET_URL = https://exploding-kittens-ws.onrender.com
-   ```
-4. **Lock down CORS on the WS host.** Once Vercel gives you a URL like `https://your-app.vercel.app`, set the WS service env var:
-   ```
-   CORS_ORIGINS = https://your-app.vercel.app
-   ```
-   (Comma-separated for multiple. `*` allows any origin — fine for testing, not for production.)
-5. Open the Vercel URL. The lobby will say "Connecting to server…" until the socket connects to the WS host.
+**Free-tier caveat**: Render free web services sleep after 15 min idle (cold start ~30s when the next user visits, which drops any in-flight rooms). For real games among friends this is usually fine; for stable hosting upgrade to Render's $7/mo Starter tier or set `min_machines_running = 1` on Fly.io.
 
-**Free-tier caveats**: Render's free web service sleeps after 15 min idle (cold start ~30s on next connect, which drops any in-flight room). Fly.io's `auto_stop_machines` does the same. For a stable lobby, use a paid always-on tier or set `min_machines_running = 1` on Fly.
+**Alternative: Vercel frontend + separate WS host**
+
+If you really want to use Vercel for the frontend, keep the `ws-server.ts` entry point and run it separately. Set `NEXT_PUBLIC_SOCKET_URL` on Vercel to the WS host URL. See `vercel.json` and the `ws` npm script for the moving parts. Most setups don't need this — the single-service deploy above is simpler.
 
 ## Project layout
 
